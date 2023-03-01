@@ -1,0 +1,41 @@
+<classloaders>
+    <!--
+        An example configuration:
+
+        <classloader>
+            // "klass":
+            //   The instance(s) of the class would be automatically given a unique name under following rules.
+            //   Package names are separated by '.'.
+            <klass>a.b.c.MyURLClassLoader</klass>
+            // "fieldName":
+            //   Should be java.lang.String. If users can ensure that the custom classloader has a unique String identifier to distinguish every distinct MyURLClassLoader instance:
+            //   We will retrieve the String value stored in that field for each MyURLClassLoader instance by using reflection.
+            <fieldName>name</fieldName>
+            // "appendJarPathsAsName":
+            //   ((URLClassLoader)loaderInstance).getURLs() will be appended to the final name if the klass is a URLClassLoader.
+            <appendJarPathsAsName>true</appendJarPathsAsName>
+            // "uniqueName":
+            //   The "uniqueName" will be appended to the final generated name of each MyURLClassLoader instance.
+            //   One can specify the "uniqueName" using a random String if he makes sure that MyURLClassLoader only have one instance during run-time.
+            //   For example, at most time, a SpringBoot program only have on LaunchedURLClassLoader instance.
+            <uniqueName></uniqueName>
+        </classloader>
+
+        We have a simple XML parser "ClassLoaderXMLParser.java" to parse the rules, and generate unique names
+        for each classloader instance. If duplicated names are found, run-time will throw an error to bail out.
+        See dragonwell11@com.alibaba.util.Utils#registerClassLoader for more information.
+        And the final generated classloader name be like:
+
+        <klass> + ['@' + <fieldName>] + ['@' + <appendJarPathsAsName>] + ['@' + <uniqueName>]
+    -->
+
+    <classloader>
+        <klass>org.apache.catalina.loader.WebappClassLoader</klass>
+        <uniqueName>webTomcatLoader_0</uniqueName>
+    </classloader>
+    <classloader>
+        <klass>org.springframework.boot.loader.LaunchedURLClassLoader</klass>
+        <uniqueName>LaunchedURLClassLoader_0</uniqueName>
+    </classloader>
+
+</classloaders>
