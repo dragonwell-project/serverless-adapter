@@ -18,7 +18,7 @@ mkdir ${OUTPUTDIR}
 
 # build CDSXMLSRC
 SRC=${FULLPATH}
-g++ -I${JAVA_HOME}/include/ -I${JAVA_HOME}/include/linux ${SRC}/loadClassAgent.cpp ${SRC}/testClassLoaderJVMTI.cpp -fPIC -shared -o ${OUTPUTDIR}/libloadclassagent.so
+g++ -I${SRC}/include/ -I${SRC}/include/linux ${SRC}/loadClassAgent.cpp ${SRC}/testClassLoaderJVMTI.cpp -fPIC -shared -o ${OUTPUTDIR}/libloadclassagent.so
 if [ $? != '0' ]
 then
 	printf "Failed to generate so file"

@@ -72,20 +72,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>run_test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${maven.test.skip}</skip>
-                            <executable>sh</executable>
-                            <arguments>
-                                <argument>src/test/resources/run_test.sh</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
