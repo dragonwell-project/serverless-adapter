@@ -7,8 +7,9 @@ else
     echo "Your JAVA_HOME: [${JAVA_HOME}]"
 fi
 
-FULLPATH=$(realpath $(dirname $0))
-OUTPUTDIR=$(realpath .)/output
+# https://unix.stackexchange.com/a/101559
+FULLPATH=$(readlink -f $(dirname $0))
+OUTPUTDIR=$(readlink -f .)/output
 
 # mkdir output
 if [ -d "${OUTPUTDIR}" ]; then
