@@ -3,6 +3,7 @@ package com.alibaba.jvm.util;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -236,5 +237,14 @@ public class Utils {
         crc.update(bytes);
         long v = ((count) << 32) | crc.getValue();
         return String.format("0x%016x", v);
+    }
+
+    public static String getjcmdPath(String javaHome) {
+        Path p = Paths.get(javaHome);
+        if (p.endsWith("jre")) {
+            return Paths.get(p.getParent().toString(), "bin", "jcmd").toString();
+        } else {
+            return Paths.get(javaHome, "bin", "jcmd").toString();
+        }
     }
 }
