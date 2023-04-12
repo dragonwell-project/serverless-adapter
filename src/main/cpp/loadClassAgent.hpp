@@ -21,18 +21,18 @@ private:
 
 class LoadClassAgent {
 public:
-  LoadClassAgent() throw(AgentException){}
+  LoadClassAgent() {}
 
-  ~LoadClassAgent() throw(AgentException);
+  ~LoadClassAgent();
 
-  void Init(JavaVM *vm) const throw(AgentException);
+  void Init(JavaVM *vm) const;
 
-  void RegisterEvent() const throw(AgentException);
+  void RegisterEvent() const;
 
   static void JNICALL HandleLoadClass(jvmtiEnv* jvmti, JNIEnv* jni, jthread thread, jobject cld);
 
 private:
-  static void CheckException(jvmtiError error) throw(AgentException) {
+  static void CheckException(jvmtiError error) {
     if (error != JVMTI_ERROR_NONE) {
       throw AgentException(error);
     }

@@ -8,11 +8,11 @@ using namespace std;
 
 jvmtiEnv* LoadClassAgent::m_jvmti = 0;
 
-LoadClassAgent::~LoadClassAgent() throw(AgentException)
+LoadClassAgent::~LoadClassAgent()
 {
 }
 
-void LoadClassAgent::Init(JavaVM *vm) const throw(AgentException) {
+void LoadClassAgent::Init(JavaVM *vm) const {
   jvmtiEnv *jvmti = 0;
   jint ret = (vm)->GetEnv(reinterpret_cast<void**>(&jvmti), JVMTI_VERSION_9);
   if (ret != JNI_OK || jvmti == 0) {
@@ -21,7 +21,7 @@ void LoadClassAgent::Init(JavaVM *vm) const throw(AgentException) {
   m_jvmti = jvmti;
 }
 
-void LoadClassAgent::RegisterEvent() const throw(AgentException) {
+void LoadClassAgent::RegisterEvent() const {
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
   callbacks.FirstClassLoadPrepare = &LoadClassAgent::HandleLoadClass;
