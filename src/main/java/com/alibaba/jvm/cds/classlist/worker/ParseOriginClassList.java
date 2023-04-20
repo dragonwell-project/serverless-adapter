@@ -31,7 +31,9 @@ public class ParseOriginClassList extends ClassListWorker<String> {
                     String definingHash = getDefiningLoaderHash(line);
                     String initiatingHash = getInitiatingLoaderHash(line);
                     ClassCDSDesc oldData = nameidCDSData.get(name + id + definingHash);
-                    if (oldData.getInitiatingHash() == null) {
+                    // oldData != null: this klass might be from __JVM_DefineClass__ so it doesn't
+                    //                  get recorded in the oldData Set.
+                    if (oldData != null && oldData.getInitiatingHash() == null) {
                         oldData.setInitiatingHash(initiatingHash);
                     }
                 } else if (line.contains("source: not.found.class")) {
@@ -39,7 +41,7 @@ public class ParseOriginClassList extends ClassListWorker<String> {
 
                     String source = getKlassPath(line);
                     String initiatingHash = getInitiatingLoaderHash(line);
-                    if (ccd.getNotFoundSet().contains(name + initiatingHash) == false) {
+                    if (!ccd.getNotFoundSet().contains(name + initiatingHash)) {
                         ClassCDSDesc newData = new ClassCDSDesc(name, source, initiatingHash);
                         ccd.getAllNotFound().add(newData);
                         ccd.getNotFoundSet().add(name + initiatingHash);
