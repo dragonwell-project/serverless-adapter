@@ -20,6 +20,11 @@
             <artifactId>gson</artifactId>
             <version>2.10</version>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.2</version>
+        </dependency>
     </dependencies>
 
     <pluginRepositories>
@@ -111,6 +116,10 @@
                         </goals>
                         <configuration>
                             <relocations>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>com.alibaba.jvm.org.objectweb.asm</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>com.google.gson</pattern>
                                     <shadedPattern>com.alibaba.jvm.com.google.gson</shadedPattern>

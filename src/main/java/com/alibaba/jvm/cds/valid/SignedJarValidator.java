@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.jar.JarFile;
 
 import com.alibaba.jvm.cds.model.ClassCDSDesc;
-import jdk.internal.misc.SharedSecrets;
-import jdk.internal.misc.JavaUtilJarAccess;
+
+import java.lang.reflect.Method;
 
 public class SignedJarValidator implements CDSDataValidator {
     private Map<String, Optional<Boolean>> signSourceMap = new HashMap<>();
@@ -30,11 +30,22 @@ public class SignedJarValidator implements CDSDataValidator {
         if (!f.exists() || f.isDirectory() || !f.getName().toLowerCase().endsWith(".jar")) {
             return Optional.of(false);
         }
-        JavaUtilJarAccess juja = SharedSecrets.javaUtilJarAccess();
+        
         try (JarFile jarFile = new JarFile(f)) {
-            List<Object> list = juja.getManifestDigests(jarFile);
+            String sharedSecretClassName = ((getVersion() == 11) ? 
+                                            "jdk.internal.misc.SharedSecrets" : "jdk.internal.access.SharedSecrets");
+            Class sharedSecretClass = Class.forName(sharedSecretClassName);
+            Method m1 = sharedSecretClass.getDeclaredMethod("javaUtilJarAccess");
+            Object javaUtilJarAccess = m1.invoke(null);
+            Class juja = javaUtilJarAccess.getClass();
+            Method m2 = juja.getDeclaredMethod("getManifestDigests", JarFile.class);
+            m2.setAccessible(true);
+            List<Object> list = (List<Object>) m2.invoke(javaUtilJarAccess, jarFile);
             return Optional.of(list != null && !list.isEmpty());
         } catch (IOException e) {
+            e.printStackTrace();
+            return Optional.empty();
+        } catch (Exception e) {
             e.printStackTrace();
             return Optional.empty();
         }
@@ -45,5 +56,15 @@ public class SignedJarValidator implements CDSDataValidator {
         for (String file : args) {
             System.out.println("[" + sjv.isSigned(file) + "] " + file);
         }
+    }
+
+    private static int getVersion() {
+        String version = System.getProperty("java.version");
+        if(version.startsWith("1.")) {
+            version = version.substring(2, 3);
+        } else {
+            int dot = version.indexOf(".");
+            if(dot != -1) { version = version.substring(0, dot); }
+        } return Integer.parseInt(version);
     }
 }
