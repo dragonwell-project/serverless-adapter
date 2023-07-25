@@ -4,7 +4,7 @@ import com.alibaba.jvm.util.DragonwellUtils;
 import jdk.internal.org.xml.sax.Attributes;
 import jdk.internal.org.xml.sax.InputSource;
 import jdk.internal.org.xml.sax.helpers.DefaultHandler;
-import jdk.internal.util.xml.SAXParser;
+
 import jdk.internal.util.xml.impl.SAXParserImpl;
 
 import java.io.*;
@@ -155,7 +155,7 @@ public class ClassLoaderXMLParser {
     }
 
     protected static void parse() throws Exception {
-        SAXParser parser = new SAXParserImpl();
+        SAXParserImpl parser = new SAXParserImpl();
         InputStream is;
         if (xmlPath == null) {
             is = ClassLoaderXMLParser.class.getResourceAsStream("/classloader-config.xml");

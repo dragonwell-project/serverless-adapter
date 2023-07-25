@@ -63,8 +63,8 @@ public class CDSDumper {
         }
     }
 
-    private static boolean enableStaticDiffClass() {
-        return info.runtimeCommandLine != null && info.runtimeCommandLine.contains("-XX:+EagerAppCDSStaticClassDiffCheck");
+    public static boolean enableStaticDiffClass() {
+        return info != null && info.runtimeCommandLine != null && info.runtimeCommandLine.contains("-XX:+EagerAppCDSStaticClassDiffCheck");
     }
 
     private static void handleCompressedOopsAndClassPointers(List<String> arguments) {

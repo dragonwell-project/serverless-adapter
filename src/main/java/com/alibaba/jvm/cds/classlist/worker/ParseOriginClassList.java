@@ -2,6 +2,8 @@ package com.alibaba.jvm.cds.classlist.worker;
 
 import com.alibaba.jvm.cds.model.ClassCDSDesc;
 import com.alibaba.jvm.cds.model.ClassesCDSDesc;
+import com.alibaba.jvm.cds.diff.FingerprintFile;
+import com.alibaba.jvm.cds.CDSDumper;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,46 +27,51 @@ public class ParseOriginClassList extends ClassListWorker<String> {
             String line = in.readLine();
             HashMap<String, ClassCDSDesc> nameidCDSData = new HashMap<>();
             while (!line.isEmpty()) {
-                if (line.contains("defining_loader_hash:") && line.contains("initiating_loader_hash:")) {
-                    String name = getKlassName(line);
-                    String id = getId(line);
-                    String definingHash = getDefiningLoaderHash(line);
-                    String initiatingHash = getInitiatingLoaderHash(line);
-                    ClassCDSDesc oldData = nameidCDSData.get(name + id + definingHash);
-                    // oldData != null: this klass might be from __JVM_DefineClass__ so it doesn't
-                    //                  get recorded in the oldData Set.
-                    if (oldData != null && oldData.getInitiatingHash() == null) {
-                        oldData.setInitiatingHash(initiatingHash);
+                // skip the comment in classlist
+                if(line.charAt(0) != '#') {
+                    if (line.contains("defining_loader_hash:") && line.contains("initiating_loader_hash:")) {
+                        String name = getKlassName(line);
+                        String id = getId(line);
+                        String definingHash = getDefiningLoaderHash(line);
+                        String initiatingHash = getInitiatingLoaderHash(line);
+                        ClassCDSDesc oldData = nameidCDSData.get(name + id + definingHash);
+                        // oldData != null: this klass might be from __JVM_DefineClass__ so it doesn't
+                        //                  get recorded in the oldData Set.
+                        if (oldData != null && oldData.getInitiatingHash() == null) {
+                            oldData.setInitiatingHash(initiatingHash);
+                        }
+                    } else if (line.contains("source: not.found.class")) {
+                        String name = getKlassName(line);
+    
+                        String source = getKlassPath(line);
+                        String initiatingHash = getInitiatingLoaderHash(line);
+                        if (!ccd.getNotFoundSet().contains(name + initiatingHash)) {
+                            ClassCDSDesc newData = new ClassCDSDesc(name, source, initiatingHash);
+                            ccd.getAllNotFound().add(newData);
+                            ccd.getNotFoundSet().add(name + initiatingHash);
+                        }
+    
+                    } else if (line.contains("source: __JVM_DefineClass__")) {
+                        // nothing to do
+                    } else if (line.contains("@lambda-form-invoker") || line.contains("@lambda-proxy")) {
+                        // nothing to do
+                    } else {
+                        String name = getKlassName(line);
+                        String id = getId(line);
+                        String source = getKlassPath(line);
+                        String superId = getSuperId(line);
+                        List<String> iids = getInterfaces(line);
+                        String definingHash = getDefiningLoaderHash(line);
+                        String fingerprint = getFingerprint(line);
+                        String originSource = getOriginSource(line);
+                        ClassCDSDesc newData = new ClassCDSDesc(name, id, superId, iids, source, originSource, definingHash, fingerprint);
+                        ccd.getAll().add(newData);
+                        nameidCDSData.put(name + id + definingHash, newData);
                     }
-                } else if (line.contains("source: not.found.class")) {
-                    String name = getKlassName(line);
-
-                    String source = getKlassPath(line);
-                    String initiatingHash = getInitiatingLoaderHash(line);
-                    if (!ccd.getNotFoundSet().contains(name + initiatingHash)) {
-                        ClassCDSDesc newData = new ClassCDSDesc(name, source, initiatingHash);
-                        ccd.getAllNotFound().add(newData);
-                        ccd.getNotFoundSet().add(name + initiatingHash);
+                    line = in.readLine();
+                    if (line == null) {
+                        break;
                     }
-
-                } else if (line.contains("source: __JVM_DefineClass__")) {
-                    // nothing to do
-                } else {
-                    String name = getKlassName(line);
-                    String id = getId(line);
-                    String source = getKlassPath(line);
-                    String superId = getSuperId(line);
-                    List<String> iids = getInterfaces(line);
-                    String definingHash = getDefiningLoaderHash(line);
-                    String fingerprint = getFingerprint(line);
-                    String originSource = getOriginSource(line);
-                    ClassCDSDesc newData = new ClassCDSDesc(name, id, superId, iids, source, originSource, definingHash, fingerprint);
-                    ccd.getAll().add(newData);
-                    nameidCDSData.put(name + id + definingHash, newData);
-                }
-                line = in.readLine();
-                if (line == null) {
-                    break;
                 }
             }
         }
@@ -72,6 +79,12 @@ public class ParseOriginClassList extends ClassListWorker<String> {
         if (next != null) {
             next.run(ccd);
         }
+
+        if (CDSDumper.enableStaticDiffClass()) {
+            String dest = genFingerprintFile(ccd);
+            System.out.println("Write CDS diff support file to " + dest + " successful!");
+        }
+
     }
 
     private String getKlassPath(String line) {
@@ -90,7 +103,7 @@ public class ParseOriginClassList extends ClassListWorker<String> {
     private String getId(String line) throws Exception {
         int index = line.indexOf("klass: ");
         if (index == -1) {
-            throw new Exception("no Id!");
+            throw new Exception("no Id in line: " + line);
         }
         index += "klass: ".length();
         while (line.charAt(index) == ' ') index++;
@@ -213,5 +226,16 @@ public class ParseOriginClassList extends ClassListWorker<String> {
         while (line.charAt(index) != ' ') index++;
         String name = line.substring(0, index);
         return name;
+    }
+
+    String genFingerprintFile(ClassesCDSDesc ccd) throws Exception {
+        FingerprintFile fingerprintFile = new FingerprintFile();
+        for (ClassCDSDesc c : ccd.getAll()) {
+            fingerprintFile.addClassRecord(c.getClassName(), c.getOriginSource(), c.getFingerprint(), c.getId(), c.getSuperId(), c.getInterfaceIds());
+        }
+        for (ClassCDSDesc c : ccd.getAllNotFound()) {
+            fingerprintFile.addNotFoundClassRecord(c.getClassName());
+        }
+        return fingerprintFile.write(CDSDumper.getInfo().dirPath);
     }
 }
