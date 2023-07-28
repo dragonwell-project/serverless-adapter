@@ -68,10 +68,10 @@ public class ParseOriginClassList extends ClassListWorker<String> {
                         ccd.getAll().add(newData);
                         nameidCDSData.put(name + id + definingHash, newData);
                     }
-                    line = in.readLine();
-                    if (line == null) {
-                        break;
-                    }
+                }
+                line = in.readLine();
+                if (line == null) {
+                    break;
                 }
             }
         }
