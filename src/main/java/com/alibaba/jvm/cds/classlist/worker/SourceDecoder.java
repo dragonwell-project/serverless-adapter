@@ -73,7 +73,7 @@ public class SourceDecoder extends ClassListWorker<ClassesCDSDesc> {
             throw new RuntimeException("First should be java/lang/Object!");
         }
         data.setSuperId(null);
-        ccd.getIdIds().put(data.getId(), "1");
+        ccd.getIdIds().put(data.getId(), data);
         data.setId(String.valueOf(ccd.genKlassID()));
         decodeSource(data);
 
@@ -84,24 +84,26 @@ public class SourceDecoder extends ClassListWorker<ClassesCDSDesc> {
                 // continue;
             }
             String newId = String.valueOf(ccd.genKlassID());
-            ccd.getIdIds().put(data.getId(), newId);
+            ccd.getIdIds().put(data.getId(), data);
             data.setId(newId);
             if (data.getSuperId() != null) {
-                String sp = ccd.getIdIds().get(data.getSuperId());
-                if (sp == null) {
+                ClassCDSDesc sp = ccd.getIdIds().get(data.getSuperId());
+                if (sp == null || sp.isInvalid()) {
                     isvalid = false;
+                } else {
+                    data.setSuperId(sp.getId());
                 }
-                data.setSuperId(sp);
             }
             if (data.getInterfaceIds() != null && data.getInterfaceIds().size() != 0) {
                 for (int j = 0; j < data.getInterfaceIds().size(); j++) {
                     String intf = data.getInterfaceIds().get(j);
-                    String iid = ccd.getIdIds().get(intf);
-                    if (iid == null) {
+                    ClassCDSDesc iid = ccd.getIdIds().get(intf);
+                    if (iid == null || iid.isInvalid()) {
                         isvalid = false;
+                    } else {
+                        data.getInterfaceIds().remove(j);
+                        data.getInterfaceIds().add(j, iid.getId());
                     }
-                    data.getInterfaceIds().remove(j);
-                    data.getInterfaceIds().add(j, iid);
                 }
             }
             if (isvalid) {
@@ -112,6 +114,8 @@ public class SourceDecoder extends ClassListWorker<ClassesCDSDesc> {
                     System.out.println(invalid.get() + ",CDSData id: " + data.getId() + ",name: " + data.getClassName());
                     continue;
                 }
+            } else {
+                data.setInvalid(true);
             }
         }
 

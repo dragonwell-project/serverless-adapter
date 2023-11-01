@@ -4,7 +4,7 @@ package com.alibaba.jvm.cds.model;
 import java.util.*;
 
 public class ClassesCDSDesc {
-    HashMap<String, String> idIds = new HashMap<>();
+    HashMap<String, ClassCDSDesc> idIds = new HashMap<>();
     Set<String> eagerCDSSet = new HashSet<>();
     Set<String> appCDSSet = new HashSet<>();
     Set<String> notFoundSet = new HashSet<>();
@@ -13,7 +13,7 @@ public class ClassesCDSDesc {
     List<ClassCDSDesc> allNotFound = new ArrayList<>();
     int klassID = 1;
 
-    public HashMap<String, String> getIdIds() {
+    public HashMap<String, ClassCDSDesc> getIdIds() {
         return idIds;
     }
 
@@ -22,7 +22,7 @@ public class ClassesCDSDesc {
     }
 
 
-    public void setIdIds(HashMap<String, String> idIds) {
+    public void setIdIds(HashMap<String, ClassCDSDesc> idIds) {
         this.idIds = idIds;
     }
 
